@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Fitness Tracker</string>
+
+    <!-- Add this -->
+    <string-array name="workout_types">
+        <item>Cardio</item>
+        <item>Strength</item>
+        <item>Flexibility</item>
+        <item>Balance</item>
+        <item>Other</item>
+    </string-array>
+</resources>

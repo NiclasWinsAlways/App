@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="@color/background_color">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Timer Display -->
+        <Chronometer
+            android:id="@+id/tv_timer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="32sp"
+            android:gravity="center"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Timer Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp"
+            android:gravity="center">
+
+            <Button
+                android:id="@+id/btn_start_timer"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:text="Start" />
+
+            <Button
+                android:id="@+id/btn_stop_timer"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:text="Stop"
+                android:layout_marginStart="16dp"
+                android:enabled="false" />
+
+            <Button
+                android:id="@+id/btn_reset_timer"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:text="Reset"
+                android:layout_marginStart="16dp"
+                android:enabled="false" />
+        </LinearLayout>
+
+        <!-- Other Workout Inputs -->
+        <EditText
+            android:id="@+id/et_workout_name"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:hint="Workout Name"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp" />
+
+        <EditText
+            android:id="@+id/et_duration"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:hint="Duration (minutes)"
+            android:inputType="number"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp" />
+
+        <Spinner
+            android:id="@+id/spinner_workout_type"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:padding="8dp"
+            android:layout_marginBottom="16dp" />
+
+        <Button
+            android:id="@+id/btn_save_workout"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="Save Workout"
+            android:textStyle="bold" />
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,35 @@
+<!-- res/layout/activity_main.xml -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <Button
+        android:id="@+id/btn_add_workout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Add Workout" />
+
+    <Button
+        android:id="@+id/btn_view_history"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="View History" />
+
+    <Button
+        android:id="@+id/btn_delete_history"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Delete History" />
+
+    <Button
+        android:id="@+id/btn_summary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="View Summary"
+        android:layout_marginBottom="16dp" />
+
+
+</LinearLayout>
