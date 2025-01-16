@@ -12,15 +12,16 @@ import java.util.List;
 public class WorkoutDatabaseManager extends SQLiteOpenHelper {
 
     // Database Information
-    private static final String DATABASE_NAME = "WorkoutTracker.db"; // Database file name
-    private static final int DATABASE_VERSION = 1; // Database version for upgrades
+    private static final String DATABASE_NAME = "WorkoutTracker.db";
+    private static final int DATABASE_VERSION = 2; // Updated version to handle schema changes
 
     // Table Name and Column Names
-    private static final String TABLE_WORKOUTS = "workouts"; // Table to store workouts
-    private static final String COLUMN_ID = "id"; // Unique ID for each workout
-    private static final String COLUMN_NAME = "name"; // Name of the workout
-    private static final String COLUMN_DURATION = "duration"; // Duration of the workout
-    private static final String COLUMN_TYPE = "type"; // Type of workout (e.g., Cardio, Strength)
+    private static final String TABLE_WORKOUTS = "workouts";
+    private static final String COLUMN_ID = "id";
+    private static final String COLUMN_NAME = "name";
+    private static final String COLUMN_DURATION = "duration";
+    private static final String COLUMN_TYPE = "type";
+    private static final String COLUMN_COMPLETED = "completed"; // New column for completion status
 
     // Constructor
     public WorkoutDatabaseManager(Context context) {
@@ -36,26 +37,24 @@ public class WorkoutDatabaseManager extends SQLiteOpenHelper {
                 COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 COLUMN_NAME + " TEXT NOT NULL, " +
                 COLUMN_DURATION + " TEXT NOT NULL, " +
-                COLUMN_TYPE + " TEXT NOT NULL)";
-        db.execSQL(createTable); // Execute the SQL command to create the table
+                COLUMN_TYPE + " TEXT NOT NULL, " +
+                COLUMN_COMPLETED + " INTEGER DEFAULT 0)"; // Default to not completed
+        db.execSQL(createTable);
     }
 
     /**
-     * Handles database upgrades by recreating the workouts table.
+     * Handles database upgrades.
      */
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_WORKOUTS); // Drop old table if it exists
-        onCreate(db); // Recreate the table
+        if (oldVersion < 2) {
+            // Add 'completed' column during upgrade
+            db.execSQL("ALTER TABLE " + TABLE_WORKOUTS + " ADD COLUMN " + COLUMN_COMPLETED + " INTEGER DEFAULT 0");
+        }
     }
 
     /**
      * Adds a new workout to the database.
-     *
-     * @param name     The name of the workout
-     * @param duration The duration of the workout
-     * @param type     The type of workout
-     * @return True if the insertion was successful, false otherwise
      */
     public boolean addWorkout(String name, String duration, String type) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -63,15 +62,14 @@ public class WorkoutDatabaseManager extends SQLiteOpenHelper {
         values.put(COLUMN_NAME, name);
         values.put(COLUMN_DURATION, duration);
         values.put(COLUMN_TYPE, type);
+        values.put(COLUMN_COMPLETED, 0); // Default to not completed
 
-        long result = db.insert(TABLE_WORKOUTS, null, values); // Insert new workout
-        return result != -1; // Return true if insertion succeeded
+        long result = db.insert(TABLE_WORKOUTS, null, values);
+        return result != -1;
     }
 
     /**
      * Retrieves all workouts from the database.
-     *
-     * @return A list of formatted workout strings
      */
     public List<String> getAllWorkouts() {
         List<String> workouts = new ArrayList<>();
@@ -80,81 +78,20 @@ public class WorkoutDatabaseManager extends SQLiteOpenHelper {
         Cursor cursor = db.query(TABLE_WORKOUTS, null, null, null, null, null, COLUMN_ID + " DESC");
         if (cursor != null && cursor.moveToFirst()) {
             do {
-                // Format each workout into a string
                 String workout = "Name: " + cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAME)) +
                         "\nDuration: " + cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DURATION)) +
-                        " minutes\nType: " + cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TYPE));
+                        " minutes\nType: " + cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TYPE)) +
+                        (cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_COMPLETED)) == 1 ? " (Completed)" : "");
                 workouts.add(workout);
             } while (cursor.moveToNext());
-            cursor.close(); // Close the cursor to free resources
+            cursor.close();
         }
 
         return workouts;
     }
 
     /**
-     * Deletes all workouts from the database.
-     */
-    public void deleteAllWorkouts() {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.delete(TABLE_WORKOUTS, null, null); // Delete all rows in the table
-    }
-
-    /**
-     * Gets the total number of workouts logged in the database.
-     *
-     * @return The total workout count
-     */
-    public int getTotalWorkouts() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_WORKOUTS, null);
-        if (cursor != null && cursor.moveToFirst()) {
-            int count = cursor.getInt(0); // Get the count from the query result
-            cursor.close();
-            return count;
-        }
-        return 0; // Return 0 if no workouts are found
-    }
-
-    /**
-     * Gets the total duration of all workouts combined.
-     *
-     * @return The total duration in minutes
-     */
-    public int getTotalDuration() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT SUM(" + COLUMN_DURATION + ") FROM " + TABLE_WORKOUTS, null);
-        if (cursor != null && cursor.moveToFirst()) {
-            int totalDuration = cursor.getInt(0); // Get the total duration
-            cursor.close();
-            return totalDuration;
-        }
-        return 0; // Return 0 if no duration is found
-    }
-
-    /**
-     * Gets the most frequently logged workout type.
-     *
-     * @return The most frequent workout type, or null if no workouts exist
-     */
-    public String getMostFrequentWorkoutType() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery(
-                "SELECT " + COLUMN_TYPE + ", COUNT(" + COLUMN_TYPE + ") AS type_count " +
-                        "FROM " + TABLE_WORKOUTS + " GROUP BY " + COLUMN_TYPE +
-                        " ORDER BY type_count DESC LIMIT 1", null);
-        if (cursor != null && cursor.moveToFirst()) {
-            String type = cursor.getString(0); // Get the workout type
-            cursor.close();
-            return type;
-        }
-        return null; // Return null if no data exists
-    }
-
-    /**
      * Retrieves the IDs of all workouts.
-     *
-     * @return A list of workout IDs
      */
     public List<Integer> getWorkoutIds() {
         List<Integer> ids = new ArrayList<>();
@@ -163,7 +100,7 @@ public class WorkoutDatabaseManager extends SQLiteOpenHelper {
 
         if (cursor != null && cursor.moveToFirst()) {
             do {
-                ids.add(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))); // Add each ID to the list
+                ids.add(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
             } while (cursor.moveToNext());
             cursor.close();
         }
@@ -172,13 +109,24 @@ public class WorkoutDatabaseManager extends SQLiteOpenHelper {
     }
 
     /**
+     * Deletes all workouts from the database.
+     */
+    public void deleteAllWorkouts() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_WORKOUTS, null, null);
+    }
+
+    /**
+     * Deletes a specific workout by ID.
+     */
+    public boolean deleteWorkoutById(int id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        int rowsDeleted = db.delete(TABLE_WORKOUTS, COLUMN_ID + " = ?", new String[]{String.valueOf(id)});
+        return rowsDeleted > 0;
+    }
+
+    /**
      * Updates an existing workout in the database.
-     *
-     * @param id       The ID of the workout to update
-     * @param name     The new name of the workout
-     * @param duration The new duration of the workout
-     * @param type     The new type of workout
-     * @return True if the update was successful, false otherwise
      */
     public boolean updateWorkout(int id, String name, String duration, String type) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -188,14 +136,23 @@ public class WorkoutDatabaseManager extends SQLiteOpenHelper {
         values.put(COLUMN_TYPE, type);
 
         int rowsUpdated = db.update(TABLE_WORKOUTS, values, COLUMN_ID + " = ?", new String[]{String.valueOf(id)});
-        return rowsUpdated > 0; // Return true if at least one row was updated
+        return rowsUpdated > 0;
     }
 
     /**
-     * Retrieves the details of a specific workout.
-     *
-     * @param id The ID of the workout to retrieve
-     * @return An array containing the workout's name, duration, and type
+     * Marks a workout as complete.
+     */
+    public boolean markWorkoutAsComplete(int id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_COMPLETED, 1); // Set to completed
+
+        int rowsUpdated = db.update(TABLE_WORKOUTS, values, COLUMN_ID + " = ?", new String[]{String.valueOf(id)});
+        return rowsUpdated > 0;
+    }
+
+    /**
+     * Retrieves details of a specific workout.
      */
     public String[] getWorkoutDetails(int id) {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -208,6 +165,126 @@ public class WorkoutDatabaseManager extends SQLiteOpenHelper {
             cursor.close();
             return new String[]{name, duration, type};
         }
-        return null; // Return null if no workout is found
+        return null;
     }
+
+    /**
+     * Retrieves the total number of workouts.
+     */
+    public int getTotalWorkouts() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM " + TABLE_WORKOUTS, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            int count = cursor.getInt(0);
+            cursor.close();
+            return count;
+        }
+        return 0;
+    }
+
+    /**
+     * Retrieves the total duration of all workouts.
+     */
+    public int getTotalDuration() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT SUM(" + COLUMN_DURATION + ") FROM " + TABLE_WORKOUTS, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            int totalDuration = cursor.getInt(0);
+            cursor.close();
+            return totalDuration;
+        }
+        return 0;
+    }
+
+    /**
+     * Retrieves the most frequent workout type.
+     */
+    public String getMostFrequentWorkoutType() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(
+                "SELECT " + COLUMN_TYPE + ", COUNT(" + COLUMN_TYPE + ") AS type_count " +
+                        "FROM " + TABLE_WORKOUTS + " GROUP BY " + COLUMN_TYPE +
+                        " ORDER BY type_count DESC LIMIT 1", null);
+        if (cursor != null && cursor.moveToFirst()) {
+            String type = cursor.getString(0);
+            cursor.close();
+            return type;
+        }
+        return "None";
+    }
+    public List<String> getWorkoutsByType(String type) {
+        List<String> workouts = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(TABLE_WORKOUTS, null, COLUMN_TYPE + " = ?", new String[]{type}, null, null, COLUMN_ID + " DESC");
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                String workout = "Name: " + cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAME)) +
+                        "\nDuration: " + cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DURATION)) +
+                        " minutes\nType: " + cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TYPE));
+                workouts.add(workout);
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+        return workouts;
+    }
+
+    public List<String> getWorkoutsByStatus(String status) {
+        List<String> workouts = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        String selection = (status.equals("Completed")) ? COLUMN_COMPLETED + " = 1" : COLUMN_COMPLETED + " = 0";
+        Cursor cursor = db.query(TABLE_WORKOUTS, null, selection, null, null, null, COLUMN_ID + " DESC");
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                String workout = "Name: " + cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAME)) +
+                        "\nDuration: " + cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_DURATION)) +
+                        " minutes\nType: " + cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TYPE)) +
+                        (cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_COMPLETED)) == 1 ? " (Completed)" : "");
+                workouts.add(workout);
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+        return workouts;
+    }
+    // Add this method to WorkoutDatabaseManager
+    // Add this method to fetch workout IDs by type
+    public List<Integer> getWorkoutIdsByType(String workoutType) {
+        List<Integer> ids = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Query to get IDs of workouts by type
+        String selection = COLUMN_TYPE + " = ?";
+        String[] selectionArgs = new String[]{workoutType};
+        Cursor cursor = db.query(TABLE_WORKOUTS, new String[]{COLUMN_ID}, selection, selectionArgs, null, null, COLUMN_ID + " DESC");
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                ids.add(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+
+        return ids;
+    }
+
+    // Add this method to fetch workout IDs by status
+    public List<Integer> getWorkoutIdsByStatus(String status) {
+        List<Integer> ids = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Determine if we're filtering by completed or not completed
+        String selection = (status.equals("Completed")) ? COLUMN_COMPLETED + " = 1" : COLUMN_COMPLETED + " = 0";
+        Cursor cursor = db.query(TABLE_WORKOUTS, new String[]{COLUMN_ID}, selection, null, null, null, COLUMN_ID + " DESC");
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                ids.add(cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID)));
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+
+        return ids;
+    }
+
 }

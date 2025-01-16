@@ -1,35 +1,59 @@
-<!-- res/layout/activity_main.xml -->
-<LinearLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:padding="16dp">
 
-    <Button
-        android:id="@+id/btn_add_workout"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Add Workout" />
+        android:orientation="vertical">
 
-    <Button
-        android:id="@+id/btn_view_history"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="View History" />
+        <!-- Add Workout Button -->
+        <Button
+            android:id="@+id/btn_add_workout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add Workout"
+            android:layout_marginBottom="16dp" />
 
-    <Button
-        android:id="@+id/btn_delete_history"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Delete History" />
+        <!-- View History Button -->
+        <Button
+            android:id="@+id/btn_view_history"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="View History"
+            android:layout_marginBottom="16dp" />
 
-    <Button
-        android:id="@+id/btn_summary"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="View Summary"
-        android:layout_marginBottom="16dp" />
+        <!-- Delete History Button -->
+        <Button
+            android:id="@+id/btn_delete_history"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Delete History"
+            android:layout_marginBottom="16dp" />
 
+        <!-- Summary Button -->
+        <Button
+            android:id="@+id/btn_summary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Summary"
+            android:layout_marginBottom="16dp" />
 
-</LinearLayout>
+        <!-- Timer Button -->
+        <Button
+            android:id="@+id/btn_timer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Open Timer"
+            android:layout_marginBottom="16dp" />
+        <!-- Calorie Calculator Button -->
+        <Button
+            android:id="@+id/btn_calorie_calculator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Calorie Calculator"
+            android:layout_marginBottom="16dp" />
+    </LinearLayout>
+</ScrollView>

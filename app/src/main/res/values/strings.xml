@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Fitness Tracker</string>
 
-    <!-- Add this -->
+    <!-- Predefined workout types -->
     <string-array name="workout_types">
         <item>Cardio</item>
         <item>Strength</item>
@@ -9,4 +9,12 @@
         <item>Balance</item>
         <item>Other</item>
     </string-array>
+
+    <!-- Completion Status for filtering -->
+    <string-array name="completion_status">
+        <item>All</item> <!-- Option to show all workouts -->
+        <item>Completed</item>
+        <item>Not Completed</item>
+    </string-array>
+
 </resources>

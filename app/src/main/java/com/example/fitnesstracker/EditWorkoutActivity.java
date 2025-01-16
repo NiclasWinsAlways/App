@@ -1,7 +1,6 @@
 package com.example.fitnesstracker;
 
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -12,9 +11,9 @@ import androidx.appcompat.app.AppCompatActivity;
 public class EditWorkoutActivity extends AppCompatActivity {
 
     // UI components for editing workout details
-    private EditText etWorkoutName, etDuration; // Input fields for workout name and duration
-    private Spinner spinnerWorkoutType; // Dropdown menu for selecting workout type
-    private Button btnUpdateWorkout; // Button to save the updated workout
+    private EditText etWorkoutName, etDuration;
+    private Spinner spinnerWorkoutType;
+    private Button btnUpdateWorkout;
     private int workoutId; // ID of the workout being edited, passed via intent
 
     @Override
@@ -22,7 +21,7 @@ public class EditWorkoutActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_workout);
 
-        // Enable the "Up" button in the app bar for navigation
+        // Enable the "Up" button in the app bar
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
@@ -33,7 +32,7 @@ public class EditWorkoutActivity extends AppCompatActivity {
         spinnerWorkoutType = findViewById(R.id.spinner_workout_type);
         btnUpdateWorkout = findViewById(R.id.btn_update_workout);
 
-        // Populate the workout type spinner with predefined options
+        // Populate the workout type spinner
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 R.array.workout_types, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -42,23 +41,19 @@ public class EditWorkoutActivity extends AppCompatActivity {
         // Get the workout ID from the intent
         workoutId = getIntent().getIntExtra("WORKOUT_ID", -1);
 
-        // Load workout details if a valid ID is provided
-        if (workoutId != -1) {
+        // Validate and load workout details
+        if (workoutId == -1) {
+            showErrorAndExit("Invalid workout ID");
+        } else {
             loadWorkoutDetails(workoutId);
         }
 
         // Set up the button listener for updating the workout
-        btnUpdateWorkout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                updateWorkout();
-            }
-        });
+        btnUpdateWorkout.setOnClickListener(v -> updateWorkout());
     }
 
     /**
      * Loads the details of the workout being edited.
-     * Retrieves the data from the database and populates the UI fields.
      *
      * @param id The ID of the workout to be loaded
      */
@@ -66,45 +61,59 @@ public class EditWorkoutActivity extends AppCompatActivity {
         WorkoutDatabaseManager dbManager = new WorkoutDatabaseManager(this);
         String[] details = dbManager.getWorkoutDetails(id);
 
-        if (details != null) {
-            // Populate the input fields with the workout details
-            etWorkoutName.setText(details[0]);
-            etDuration.setText(details[1]);
+        if (details == null) {
+            showErrorAndExit("Workout not found");
+            return;
+        }
 
-            // Set the spinner to the correct workout type
-            String type = details[2];
-            ArrayAdapter<CharSequence> adapter = (ArrayAdapter<CharSequence>) spinnerWorkoutType.getAdapter();
-            int position = adapter.getPosition(type);
+        // Populate input fields
+        etWorkoutName.setText(details[0]);
+        etDuration.setText(details[1]);
+
+        // Set the spinner to the correct workout type
+        ArrayAdapter<CharSequence> adapter = (ArrayAdapter<CharSequence>) spinnerWorkoutType.getAdapter();
+        int position = adapter.getPosition(details[2]);
+        if (position >= 0) {
             spinnerWorkoutType.setSelection(position);
+        } else {
+            // Set default value if type not found
+            spinnerWorkoutType.setSelection(0);
         }
     }
 
     /**
      * Updates the workout in the database with the new details provided by the user.
-     * Validates input fields before saving changes.
      */
     private void updateWorkout() {
-        // Retrieve user input
         String name = etWorkoutName.getText().toString().trim();
         String duration = etDuration.getText().toString().trim();
         String type = spinnerWorkoutType.getSelectedItem().toString();
 
-        // Validate input fields
         if (name.isEmpty() || duration.isEmpty()) {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Update the workout in the database
         WorkoutDatabaseManager dbManager = new WorkoutDatabaseManager(this);
         boolean success = dbManager.updateWorkout(workoutId, name, duration, type);
 
-        // Provide feedback to the user
         if (success) {
             Toast.makeText(this, "Workout updated successfully!", Toast.LENGTH_SHORT).show();
-            finish(); // Close the activity and return to the previous screen
+            setResult(RESULT_OK);
+            finish();
         } else {
             Toast.makeText(this, "Error updating workout!", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /**
+     * Displays an error message and exits the activity.
+     *
+     * @param message The error message to display
+     */
+    private void showErrorAndExit(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        setResult(RESULT_CANCELED);
+        finish();
     }
 }
